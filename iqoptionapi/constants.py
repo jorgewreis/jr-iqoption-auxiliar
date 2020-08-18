@@ -1,5 +1,3 @@
-"Module for IQ Option API constants."
-""#~~~need to update~~~
 ACTIVES = {
 	'EURUSD': 1,
 	'EURGBP': 2,
@@ -9,8 +7,20 @@ ACTIVES = {
 	'USDJPY': 6,
 	'AUDCAD': 7,
 	'NZDUSD': 8,
-	'OP9': 9,
+	'EURRUB': 9,
 	'USDRUB': 10,
+	
+	'COMMBK': 13,
+	'DAIM': 14,
+	'DBFRA': 15,
+	'EOAN': 16,
+	
+	'BPLON': 23,
+	
+	'GAZPROM': 27,
+	'ROSNEFT': 28,
+	'SBERS': 29,
+	
 	'AMAZON': 31,
 	'APPLE': 32,
 	'BAIDU': 33,
@@ -19,10 +29,14 @@ ACTIVES = {
 	'GOOGLE': 36,
 	'INTEL': 37,
 	'MSFT': 38,
+	
 	'YAHOO': 40,
 	'AIG': 41,
+	'BOA': 42,
+	
 	'CITI': 45,
 	'COKE': 46,
+	
 	'GE': 48,
 	'GM': 49,
 	'GS': 50,
@@ -30,7 +44,18 @@ ACTIVES = {
 	'MCDON': 52,
 	'MORSTAN': 53,
 	'NIKE': 54,
+	
+	'VERIZON': 56,
+	'WMART': 57,
+	
+	'DAX30': 66,
+	'DJIA': 67,
+	'FTSE': 68,
+	'DSDQ': 69,
+	'NK': 70,
+	'SP': 71,
 	'USDCHF': 72,
+	'BTCX': 73,
 	'XAUUSD': 74,
 	'XAGUSD': 75,
 	'EURUSD-OTC': 76,
@@ -39,11 +64,16 @@ ACTIVES = {
 	'EURJPY-OTC': 79,
 	'NZDUSD-OTC': 80,
 	'GBPUSD-OTC': 81,
+	'EURRUB-OTC': 82,
+	'USDRUB-OTC': 83,
 	'GBPJPY-OTC': 84,
 	'USDJPY-OTC': 85,
 	'AUDCAD-OTC': 86,
 	'ALIBABA': 87,
 	'YANDEX': 95,
+
+	'PAN': 97,
+
 	'AUDUSD': 99,
 	'USDCAD': 100,
 	'AUDJPY': 101,
@@ -54,11 +84,24 @@ ACTIVES = {
 	'CHFJPY': 106,
 	'CADCHF': 107,
 	'EURAUD': 108,
+
+	'BMW': 110,
+	'LUFTHANSA': 111,
+
 	'TWITTER': 113,
+
 	'FERRARI': 133,
+
+	'SMI INDEX': 166,
 	'TESLA': 167,
 	'USDNOK': 168,
+
 	'EURNZD': 212,
+	'SIN-FAKE': 213,
+
+	'BRENT OIL': 215,
+
+	'NTDOY': 218,
 	'USDSEK': 219,
 	'USDTRY': 220,
 	'MMM:US': 252,
@@ -69,19 +112,32 @@ ACTIVES = {
 	'ADBE:US': 258,
 	'AAP:US': 259,
 	'AA:US': 269,
+
 	'AGN:US': 272,
+
 	'MO:US': 278,
+
 	'AMGN:US': 290,
+
 	'T:US': 303,
 	'ADSK:US': 304,
+
 	'BAC:US': 313,
+
 	'BBY:US': 320,
+
 	'BA:US': 324,
+
 	'BMY:US': 328,
+
 	'CAT:US': 338,
+
 	'CTL:US': 344,
+
 	'CVX:US': 349,
+
 	'CTAS:US': 356,
+	
 	'CTXS:US': 360,
 	'CL:US': 365,
 	'CMCSA:US': 366,
@@ -163,7 +219,7 @@ ACTIVES = {
 	'WFC:US': 733,
 	'SNAP': 756,
 	'DUBAI': 757,
-	'TA25': 758,
+	'TELAVIV': 758,
 	'AMD': 760,
 	'ALGN': 761,
 	'ANSS': 762,
