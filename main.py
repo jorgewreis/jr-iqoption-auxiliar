@@ -11,6 +11,9 @@ from iqoptionapi.stable_api import IQ_Option
 from datetime import datetime
 from dateutil import tz
 
+user = userdata.mainUser
+api = IQ_Option(user["username"], user["password"])
+
 ''' Config Colorama '''
 init(convert=True, autoreset=True)
 
@@ -21,8 +24,9 @@ tempoGrafInfo = "5 segundos"
 optionCod = "EURUSD"
 optionType = "BINARY"
 
+
 def descProgram():
-    version = "1.0.02"
+    version = "1.02"
     appname = "IQ Option Auxiliar - Jorge Reis "
     os.system('cls')
     print("APP " + appname + "   Versão: " + version)
@@ -37,6 +41,7 @@ def descPainel():
 
     print("Modo: ", Fore.GREEN + modoOperacaoPainel, "    Caixa: ", Fore.GREEN + "R$ " + str(caixaInicial), "    Opção: ", Fore.GREEN + str(optionType), "/", Fore.GREEN + str(optionCod) + "    Tempo do gráfico:", tempoGrafInfo + "\n")
 
+
 def menuPrincipal():
     global menuOp
     menuOp = 1
@@ -44,7 +49,8 @@ def menuPrincipal():
         descProgram()
         print('\n MENU PRINCIPAL:')
         print(' [1] - TRADER')
-        print(' [2] - CONFIGURAÇÕES')
+        print(' [2] - RANKING')
+        print(' [3] - CONFIGURAÇÕES')
         print(Fore.LIGHTRED_EX + '\n [0] - SAIR')
 
         menuOp = int(input('\n Digite o número da opção escolhida: '))
@@ -54,6 +60,10 @@ def menuPrincipal():
             print(Fore.RED + " Erro! Opção não configurada")
             time.sleep(2)
         elif menuOp == 2:
+            print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
+            funListarRanking()
+            time.sleep(2)
+        elif menuOp == 3:
             print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
             menuConfig()
             time.sleep(2)
@@ -93,12 +103,12 @@ def menuConfig():
             alteraTempoGrafico()
         menuOp = 1
 
-
 def avisos():
     global modoOperacao
     if modoOperacao == "":
         modoOperacao = "PRACTICE"
         print(Fore.LIGHTYELLOW_EX + " ... definindo modo de operação para Treinamento")
+
 
 def alteraModo():
     global modoOperacao, api, caixaInicial
@@ -125,7 +135,6 @@ def alteraOption():
 
     print(Fore.RED + '\n ... voltando para o menu anterior')
     time.sleep(2)
-
 
 def alteraTempoGrafico():
     global tempoGrafReal, tempoGrafInfo
@@ -191,7 +200,6 @@ def perfil():
 	
     return perfil
 
-
 def timestamp_converter(x, retorno=1):
     hora = datetime.strptime(datetime.utcfromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S'), '%Y-%m-%d %H:%M:%S')
     hora = hora.replace(tzinfo=tz.gettz('GMT'))
@@ -216,17 +224,69 @@ def runConfTeste():
     print("\n", Fore.GREEN + dir, "de", optionCod, "no valor de R$", round(entrada, 2))
     time.sleep(3)
 
+def funListarRanking():
+    global api, menuOp2
+
+    menuOp2 = 1
+    frequentOptions = []
+    tradersOnline = []
+    countTrader = 0
+    os.system('cls')
+
+    while menuOp2 == 1:
+        qtdTraders = int(input(" Informe quantos traders quer listar: "))
+        os.system('cls')
+        print(" ... aguarde, buscando lista de traders")
+        listaRanking = api.get_leader_board('Worldwide', 1, int(qtdTraders), 0, 0, 0, 0, 0, 2)['result']['positional']
+        descProgram()
+        print('\n    RANKING')
+        print('\n    Listando os', qtdTraders, 'melhores traders \n')
+
+        for n in listaRanking:
+            traderId = listaRanking[n]['user_id']
+            traderPais = listaRanking[n]['flag']
+            traderPerfil = listaRanking[n]['user_name']
+            print(api.get_user_profile_client(traderId)[0])
+
+            status = api.get_users_availability(traderId)
+            '''traderOption = api.get_name_by_activeId(traderId['statuses'][0]['selected_asset_id'])'''
+            traderOptionType = api.get_user_profile_client['statuses'][0]['selected_instrument_type']
+            
+
+            if (status['statuses'][0]['status'] == 'online'):
+                print('\n', str(n) + ".", traderPerfil, Fore.GREEN + '● online', '(' + traderPais + ') - ID:', traderId)
+                print('  operando agora', traderOptionType)
+                tradersOnline.append(traderId)
+                '''frequentOptions.append(traderOption)'''
+                countTrader = countTrader + 1
+            else:
+                print('\n', str(n) + ".", traderPerfil, '(' + str(traderPais) + ') - ID:', traderId)
+        
+        if countTrader == 0:
+            print('\n Nenhum dos', qtdTraders, 'primeiros traders está online no momento')
+        else:
+            print('\n ', countTrader, 'dos', qtdTraders, ' estão online no momento')
+            print(' Traders online no momento: ', tradersOnline)
+        
+        listarNovamente()
+
+def listarNovamente():
+    global menuOp2
+    op2 = input('\n Deseja listar novamente? [S] SIM | [N] Não ')
+    if op2 == 'S' or op2 == 's':
+        menuOp2 = 1
+        os.system('cls')
+    else:
+        menuOp2 = 0
 
 
 ''' Definições finais antes de iniciar '''
 
-
 def conexao():
     global api, user, caixaInicial, modoOperacao
-    user = userdata.mainUser
-    api = IQ_Option(user["username"], user["password"])
+    
     print(Fore.LIGHTYELLOW_EX + "\n ... iniciando aplicativo")
-    print(Fore.LIGHTYELLOW_EX + "\n ... estabelecendo conexão com o servidor")
+    print(Fore.LIGHTYELLOW_EX + " ... estabelecendo conexão com o servidor")
     api.connect()
    
     while True:
@@ -234,7 +294,7 @@ def conexao():
             print(Fore.LIGHTYELLOW_EX + "\n ... tentativa de reconexão")
             api.connect()
         else:
-            print(Fore.LIGHTGREEN_EX + "conectado com sucesso!")
+            print(Fore.LIGHTGREEN_EX + "\n     conectado com sucesso!")
             break
     
     time.sleep(2)
