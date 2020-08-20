@@ -15,8 +15,9 @@ from dateutil import tz
 init(convert=True, autoreset=True)
 
 ''' Definições iniciais '''
-caixaInicial = 0
 valordeEntrada = 1
+tempoGrafReal = 5
+tempoGrafInfo = "5 segundos"
 optionCod = "EURUSD"
 optionType = "BINARY"
 
@@ -34,7 +35,7 @@ def descPainel():
     else:
         modoOperacaoPainel = "TREINAMENTO"
 
-    print("Modo: ", Fore.GREEN + modoOperacaoPainel, "    Caixa: ", Fore.GREEN + "R$ " + str(caixaInicial), "    Opção: ", Fore.GREEN + str(optionType), "/", Fore.GREEN + str(optionCod) + "\n")
+    print("Modo: ", Fore.GREEN + modoOperacaoPainel, "    Caixa: ", Fore.GREEN + "R$ " + str(caixaInicial), "    Opção: ", Fore.GREEN + str(optionType), "/", Fore.GREEN + str(optionCod) + "    Tempo do gráfico:", tempoGrafInfo + "\n")
 
 def menuPrincipal():
     global menuOp
@@ -78,12 +79,8 @@ def menuConfig():
         print(' 2. CONFIGURAÇÕES:')
         print('    [1] - Alterar modo de operação para', Fore.LIGHTYELLOW_EX + modoRun)
         print('    [2] - Alterar opção')
-        '''print('    [3] - ALTERAR IDS (COPY TRADER)')
-        print('    [4] - BUSCAR MELHORES OPÇÕES, por PAYOUT', Fore.LIGHTGREEN_EX + verPayout)
-        print('    [5] - BUSCAR MELHORES OPÇÕES, por USER TOP', Fore.LIGHTGREEN_EX + verRanking)
-        print('    [6] - BUSCAR ID DE USUÁRIO PELO NOME')
-        print('    [7] - BUSCAR INFO DE USUÁRIO PELO ID')'''
-        print('    [8] - FAST BUY')
+        print('    [3] - Alterar tempo do gráfico')
+
         print(Fore.LIGHTRED_EX + '\n    [0] - VOLTAR AO MENU PRINCIPAL')
 
         confOp = int(input("\n Digite o número da opção escolhida: "))
@@ -92,8 +89,8 @@ def menuConfig():
             alteraModo()
         elif confOp == 2:
             alteraOption()
-        elif confOp == 8:
-            runConfTeste()
+        elif confOp == 3:
+            alteraTempoGrafico()
         menuOp = 1
 
 
@@ -104,7 +101,7 @@ def avisos():
         print(Fore.LIGHTYELLOW_EX + " ... definindo modo de operação para Treinamento")
 
 def alteraModo():
-    global modoOperacao
+    global modoOperacao, api, caixaInicial
     if modoOperacao == "PRACTICE":
         print(Fore.GREEN + " ... alterando modo de operação para Uso real")
         modoOperacao = "REAL"
@@ -112,11 +109,13 @@ def alteraModo():
         print(Fore.LIGHTYELLOW_EX + " ... alterando modo de operação para Treinamento")
         modoOperacao = "PRACTICE"
     print(Fore.RED + '\n ... voltando para menu anterior')
+    caixaInicial = api.get_balance()
     time.sleep(2)
 
 def alteraOption():
     global optionCod
-
+    
+    os.system('cls')
     optionCod = str.upper(input('\n Informe uma opção para operar: '))
 
     if optionCod == "":
@@ -127,29 +126,79 @@ def alteraOption():
     print(Fore.RED + '\n ... voltando para o menu anterior')
     time.sleep(2)
 
+
+def alteraTempoGrafico():
+    global tempoGrafReal, tempoGrafInfo
+    tempos = [1, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 14400, 28800, 43200, 86400, 604800, 2592000]
+    escala = ['segundos', 'minutos', 'horas', 'dia', 'semana', 'mês']
+
+    os.system('cls')
+    print(" ESCOLHA A ESCALA DE TEMPO: ")
+
+    cont = 1
+    for i in escala:
+        print("    [" + str(cont) + "] - " + i.upper())
+        cont += 1
+
+    tempoEscala = int(input(" > "))-1
+
+    print(" ESCOLHA O TEMPO DO GRÁFICO EM", escala[tempoEscala].upper() + ": ")
+    if tempoEscala == 0:
+        print("    [1] - SEGUNDO")
+        print("    [5] - SEGUNDOS")
+        print("    [10] - SEGUNDOS")
+        print("    [15] - SEGUNDOS")
+        print("    [30] - SEGUNDOS")
+        tempo = input(" > ")
+        tempoGrafReal = tempo
+    elif tempoEscala == 1:
+        print("    [1] - MINUTO")
+        print("    [2] - MINUTOS")
+        print("    [5] - MINUTOS")
+        print("    [10] - MINUTOS")
+        print("    [15] - MINUTOS")
+        print("    [30] - MINUTOS")
+        tempo = input(" > ")
+        tempoGrafReal = int(tempo) * 60
+    elif tempoEscala == 2:
+        print("    [1] - HORA")
+        print("    [2] - HORAS")
+        print("    [4] - HORAS")
+        print("    [8] - HORAS")
+        print("    [12] - HORAS")
+        tempo = input(" > ")
+        tempoGrafReal = int(tempo) * 3600
+    elif tempoEscala == 3:
+        tempo = 1
+        tempoGrafReal = tempos[16]
+    elif tempoEscala == 4:
+        tempo = 1
+        tempoGrafReal = tempos[17]
+    else:
+        tempo = 1
+        tempoGrafReal = tempos[18]
+
+    tempoGrafInfo = str(tempo) + " " + str(escala[tempoEscala])
+    print(' Tempo gráfico alterado com sucesso para', Fore.GREEN + tempoGrafInfo)
+
+    print(Fore.RED + '\n ... voltando para o menu anterior')
+    time.sleep(2)
+
+
 def perfil():
     global api
     perfil = json.loads(json.dumps(api.get_profile_ansyc()))
 	
     return perfil
 
-def conexao():
-    global api, user, caixaInicial, modoOperacao
-    user = userdata.mainUser
-    api = IQ_Option(user["username"], user["password"])
-    check, reason = api.connect()
 
-    print(Fore.LIGHTYELLOW_EX + "\n ... estabelecendo conexão com o servidor")
-    time.sleep(2)
-    modoOperacao = api.get_balance_mode()
-    caixaInicial = api.get_balance()
+def timestamp_converter(x, retorno=1):
+    hora = datetime.strptime(datetime.utcfromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S'), '%Y-%m-%d %H:%M:%S')
+    hora = hora.replace(tzinfo=tz.gettz('GMT'))
 
+    return str(hora.astimezone(tz.gettz('America/Sao Paulo')))[:-6] if retorno == 1 else hora.astimezone(
+        tz.gettz('America/Sao Paulo'))
 
-def time_converter(x): # Função para converter timestamp
-	hora = datetime.strptime(datetime.utcfromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S'), '%Y-%m-%d %H:%M:%S')
-	hora = hora.replace(tzinfo=tz.gettz('GMT'))
-	
-	return str(hora)[:-6]
 
 def runConfTeste():
     global api, optionCod
@@ -167,12 +216,33 @@ def runConfTeste():
     print("\n", Fore.GREEN + dir, "de", optionCod, "no valor de R$", round(entrada, 2))
     time.sleep(3)
 
+
+
 ''' Definições finais antes de iniciar '''
 
 
+def conexao():
+    global api, user, caixaInicial, modoOperacao
+    user = userdata.mainUser
+    api = IQ_Option(user["username"], user["password"])
+    print(Fore.LIGHTYELLOW_EX + "\n ... iniciando aplicativo")
+    print(Fore.LIGHTYELLOW_EX + "\n ... estabelecendo conexão com o servidor")
+    api.connect()
+   
+    while True:
+        if api.check_connect() == False:
+            print(Fore.LIGHTYELLOW_EX + "\n ... tentativa de reconexão")
+            api.connect()
+        else:
+            print(Fore.LIGHTGREEN_EX + "conectado com sucesso!")
+            break
+    
+    time.sleep(2)
+    modoOperacao = api.get_balance_mode()
+    caixaInicial = api.get_balance()
 
 
 ''' Início do programa '''
 conexao()
-menuPrincipal()
 avisos()
+menuPrincipal()
