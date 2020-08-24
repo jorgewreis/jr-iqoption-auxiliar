@@ -8,6 +8,7 @@ import collections
 import logging
 from colorama import init, Fore, Back, Style
 from iqoptionapi.stable_api import IQ_Option
+from iqoptionapi.api import Logout
 from datetime import datetime
 from dateutil import tz
 
@@ -26,7 +27,7 @@ optionType = "BINARY"
 
 
 def descProgram():
-    version = "1.02"
+    version = "1.02.01 - Alpha"
     appname = "IQ Option Auxiliar - Jorge Reis "
     os.system('cls')
     print("APP " + appname + "   Versão: " + version)
@@ -51,6 +52,7 @@ def menuPrincipal():
         print(' [1] - TRADER')
         print(' [2] - RANKING')
         print(' [3] - CONFIGURAÇÕES')
+        print(' [4] - LISTAR PENDENCIAS DAS CONSTANTES')
         print(Fore.LIGHTRED_EX + '\n [0] - SAIR')
 
         menuOp = int(input('\n Digite o número da opção escolhida: '))
@@ -66,6 +68,10 @@ def menuPrincipal():
         elif menuOp == 3:
             print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
             menuConfig()
+            time.sleep(2)
+        elif menuOp == 4:
+            print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
+            runListarConst()
             time.sleep(2)
         else:
             print(Fore.YELLOW + "\n ... encerrando aplicativo")
@@ -115,11 +121,13 @@ def alteraModo():
     if modoOperacao == "PRACTICE":
         print(Fore.GREEN + " ... alterando modo de operação para Uso real")
         modoOperacao = "REAL"
+        caixaInicial = api.get_balances()['msg'][0]['amount']
     else:
         print(Fore.LIGHTYELLOW_EX + " ... alterando modo de operação para Treinamento")
         modoOperacao = "PRACTICE"
+        caixaInicial = api.get_balances()['msg'][1]['amount']
     print(Fore.RED + '\n ... voltando para menu anterior')
-    caixaInicial = api.get_balance()
+    
     time.sleep(2)
 
 def alteraOption():
@@ -207,6 +215,20 @@ def timestamp_converter(x, retorno=1):
     return str(hora.astimezone(tz.gettz('America/Sao Paulo')))[:-6] if retorno == 1 else hora.astimezone(
         tz.gettz('America/Sao Paulo'))
 
+def runListarConst():
+    n = 200
+    while n < 400:
+        if api.get_financial_information(n)['msg']['data']['active'] == None:
+            print("'':", str(n) + ",")
+        else:
+            option = api.get_financial_information(n)['msg']['data']['active']['name']
+            print("'" + option.upper() + "':", str(n) + ",")
+            
+            
+        n = n + 1
+        time.sleep(2)
+    
+    listarNovamente()
 
 def runConfTeste():
     global api, optionCod
@@ -245,17 +267,30 @@ def funListarRanking():
         for n in listaRanking:
             traderId = listaRanking[n]['user_id']
             traderPais = listaRanking[n]['flag']
-            traderPerfil = listaRanking[n]['user_name']
-            print(api.get_user_profile_client(traderId)[0])
-
+            traderPerfil = api.get_user_profile_client(traderId)['user_name']
+            traderVip = api.get_user_profile_client(traderId)['is_vip']
+            try:
+                traderOption = api.get_name_by_activeId(api.get_users_availability(traderId)['statuses'][0]['selected_asset_id'])
+            except:
+                traderOption = ""
+                
+            try:
+                # api.get_users_availability(traderId)['statuses'][0]['selected_asset_id']
+                traderOptionType = api.get_financial_information(api.get_users_availability(traderId)['statuses'][0]['selected_asset_id'])['msg']['data']['active']
+            except:
+                traderOptionType = ""
+                        
             status = api.get_users_availability(traderId)
-            '''traderOption = api.get_name_by_activeId(traderId['statuses'][0]['selected_asset_id'])'''
-            traderOptionType = api.get_user_profile_client['statuses'][0]['selected_instrument_type']
             
-
             if (status['statuses'][0]['status'] == 'online'):
-                print('\n', str(n) + ".", traderPerfil, Fore.GREEN + '● online', '(' + traderPais + ') - ID:', traderId)
-                print('  operando agora', traderOptionType)
+                if traderVip == True:
+                    infoVip = "VIP"
+                else:
+                    infoVip = ""
+                                                    
+                print('\n', str(n) + ".", traderPerfil, Fore.GREEN + infoVip + ' ● online', '(' + traderPais + ') - ID:', traderId)
+                print('    operando agora', traderOptionType, "-", traderOption)
+                                    
                 tradersOnline.append(traderId)
                 '''frequentOptions.append(traderOption)'''
                 countTrader = countTrader + 1
@@ -263,10 +298,10 @@ def funListarRanking():
                 print('\n', str(n) + ".", traderPerfil, '(' + str(traderPais) + ') - ID:', traderId)
         
         if countTrader == 0:
-            print('\n Nenhum dos', qtdTraders, 'primeiros traders está online no momento')
+            print('\n\n Nenhum dos', qtdTraders, 'melhores traders está online no momento')
         else:
-            print('\n ', countTrader, 'dos', qtdTraders, ' estão online no momento')
-            print(' Traders online no momento: ', tradersOnline)
+            print('\n\n', countTrader, 'dos', qtdTraders, 'melhores traders estão online no momento')
+            print(' Ids: ', tradersOnline)
         
         listarNovamente()
 
@@ -284,8 +319,8 @@ def listarNovamente():
 
 def conexao():
     global api, user, caixaInicial, modoOperacao
-    
-    print(Fore.LIGHTYELLOW_EX + "\n ... iniciando aplicativo")
+    os.system('cls')
+    print("\n     iniciando aplicativo")
     print(Fore.LIGHTYELLOW_EX + " ... estabelecendo conexão com o servidor")
     api.connect()
    
@@ -306,3 +341,4 @@ def conexao():
 conexao()
 avisos()
 menuPrincipal()
+Logout(api)

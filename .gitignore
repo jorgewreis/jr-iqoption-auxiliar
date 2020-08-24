@@ -1,1 +1,6 @@
+# Ignorar arquivos
 userdata.py
+
+# Ignorar pastas
+/iqoptionapi/__pycache__/
+/__pycache__/
