@@ -27,7 +27,7 @@ optionType = "BINARY"
 
 
 def descProgram():
-    version = "1.02.01 - Alpha"
+    version = "1.02.02"
     appname = "IQ Option Auxiliar - Jorge Reis "
     os.system('cls')
     print("APP " + appname + "   Versão: " + version)
@@ -216,17 +216,16 @@ def timestamp_converter(x, retorno=1):
         tz.gettz('America/Sao Paulo'))
 
 def runListarConst():
-    n = 200
-    while n < 400:
+    n = 1
+    while n <= 1400:
         if api.get_financial_information(n)['msg']['data']['active'] == None:
-            print("'':", str(n) + ",")
+            print("' ':", str(n) + ",")
         else:
             option = api.get_financial_information(n)['msg']['data']['active']['name']
             print("'" + option.upper() + "':", str(n) + ",")
             
             
         n = n + 1
-        time.sleep(2)
     
     listarNovamente()
 
@@ -269,14 +268,18 @@ def funListarRanking():
             traderPais = listaRanking[n]['flag']
             traderPerfil = api.get_user_profile_client(traderId)['user_name']
             traderVip = api.get_user_profile_client(traderId)['is_vip']
+            
+            
             try:
                 traderOption = api.get_name_by_activeId(api.get_users_availability(traderId)['statuses'][0]['selected_asset_id'])
+                #print(api.get_users_availability(traderId)['statuses'][0]['selected_asset_id'])
             except:
                 traderOption = ""
-                
+            
             try:
                 # api.get_users_availability(traderId)['statuses'][0]['selected_asset_id']
-                traderOptionType = api.get_financial_information(api.get_users_availability(traderId)['statuses'][0]['selected_asset_id'])['msg']['data']['active']
+                # api.get_financial_information(api.get_users_availability(traderId)['statuses'][0]
+                traderOptionType = api.get_users_availability(traderId)['statuses'][0]['selected_instrument_type'].upper()
             except:
                 traderOptionType = ""
                         
@@ -288,11 +291,12 @@ def funListarRanking():
                 else:
                     infoVip = ""
                                                     
-                print('\n', str(n) + ".", traderPerfil, Fore.GREEN + infoVip + ' ● online', '(' + traderPais + ') - ID:', traderId)
-                print('    operando agora', traderOptionType, "-", traderOption)
+                print('\n', str(n) + ".", Fore.GREEN + traderPerfil, Fore.GREEN + infoVip + '● online', '(' + traderPais + ') - ID:', traderId)
+                if traderOption != "":
+                    print('     operando agora', traderOptionType, "-", traderOption)
                                     
                 tradersOnline.append(traderId)
-                '''frequentOptions.append(traderOption)'''
+                frequentOptions.append(traderOption)
                 countTrader = countTrader + 1
             else:
                 print('\n', str(n) + ".", traderPerfil, '(' + str(traderPais) + ') - ID:', traderId)
