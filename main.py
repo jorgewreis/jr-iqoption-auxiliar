@@ -6,6 +6,7 @@ import json
 import os
 import collections
 import logging
+import locale
 from colorama import init, Fore, Back, Style
 from iqoptionapi.stable_api import IQ_Option
 from iqoptionapi.api import Logout
@@ -27,7 +28,7 @@ optionType = "BINARY"
 
 
 def descProgram():
-    version = "1.02.02"
+    version = "1.02.04 Build 10"
     appname = "IQ Option Auxiliar - Jorge Reis "
     os.system('cls')
     print("APP " + appname + "   Versão: " + version)
@@ -40,7 +41,7 @@ def descPainel():
     else:
         modoOperacaoPainel = "TREINAMENTO"
 
-    print("Modo: ", Fore.GREEN + modoOperacaoPainel, "    Caixa: ", Fore.GREEN + "R$ " + str(caixaInicial), "    Opção: ", Fore.GREEN + str(optionType), "/", Fore.GREEN + str(optionCod) + "    Tempo do gráfico:", tempoGrafInfo + "\n")
+    print("Modo: ", Fore.GREEN + modoOperacaoPainel, "    Caixa: ", Fore.GREEN + str(caixaInicial), "    Opção: ", Fore.GREEN + str(optionType), "/", Fore.GREEN + str(optionCod), "    Tempo do gráfico:", Fore.GREEN + tempoGrafInfo + "\n")
 
 
 def menuPrincipal():
@@ -118,37 +119,39 @@ def avisos():
 
 def alteraModo():
     global modoOperacao, api, caixaInicial
+    os.system('cls')
+    
     if modoOperacao == "PRACTICE":
-        print(Fore.GREEN + " ... alterando modo de operação para Uso real")
+        print(Fore.LIGHTYELLOW_EX + " Modo alterado para Real")
         modoOperacao = "REAL"
         caixaInicial = api.get_balances()['msg'][0]['amount']
     else:
-        print(Fore.LIGHTYELLOW_EX + " ... alterando modo de operação para Treinamento")
+        print(Fore.LIGHTYELLOW_EX + " Modo alterado para Treinamento")
         modoOperacao = "PRACTICE"
         caixaInicial = api.get_balances()['msg'][1]['amount']
-    print(Fore.RED + '\n ... voltando para menu anterior')
+    print('\n ... voltando para menu anterior')
     
     time.sleep(2)
 
 def alteraOption():
     global optionCod
-    
     os.system('cls')
     optionCod = str.upper(input('\n Informe uma opção para operar: '))
 
     if optionCod == "":
         print(' Nenhuma opção foi definida')
     else:
-        print(' Opção padrão alterada com sucesso para', Fore.GREEN + optionCod)
+        print(Fore.LIGHTYELLOW_EX + ' Opção padrão alterada para', Fore.GREEN + optionCod)
 
-    print(Fore.RED + '\n ... voltando para o menu anterior')
+    print('\n ... voltando para o menu anterior')
     time.sleep(2)
 
 def alteraTempoGrafico():
     global tempoGrafReal, tempoGrafInfo
     tempos = [1, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 14400, 28800, 43200, 86400, 604800, 2592000]
-    escala = ['segundos', 'minutos', 'horas', 'dia', 'semana', 'mês']
-
+    escala = ['segundo', 'minuto', 'hora', 'dia', 'semana', 'mês']
+    tempoGrafReal = ""
+    tempoGrafInfo = ""
     os.system('cls')
     print(" ESCOLHA A ESCALA DE TEMPO: ")
 
@@ -156,49 +159,88 @@ def alteraTempoGrafico():
     for i in escala:
         print("    [" + str(cont) + "] - " + i.upper())
         cont += 1
-
-    tempoEscala = int(input(" > "))-1
-
-    print(" ESCOLHA O TEMPO DO GRÁFICO EM", escala[tempoEscala].upper() + ": ")
+    tempoEscala = int(input("\n Informe a escala: "))-1
+  
+    os.system('cls')
+    print(" ESCOLHA O TEMPO DO GRÁFICO: ")
     if tempoEscala == 0:
-        print("    [1] - SEGUNDO")
-        print("    [5] - SEGUNDOS")
-        print("    [10] - SEGUNDOS")
-        print("    [15] - SEGUNDOS")
-        print("    [30] - SEGUNDOS")
-        tempo = input(" > ")
-        tempoGrafReal = tempo
+        tempoSeg = tempos[0:5]
+        cont = 0
+        for i in tempoSeg:
+            if i != 1:
+                plural = 's'
+            else:
+                plural = ''
+            print("    " + str(i), (escala[0] + plural).upper())
+        
+        while tempoGrafReal == "":
+            tempo = input("\n Informe o tempo gráfico: ")
+            for i in tempoSeg:
+                if tempo == str(i):
+                    tempoGrafReal = tempo
+                    tempoGrafInfo = str(tempo) + " " + str(escala[0]) + plural
+                    
     elif tempoEscala == 1:
-        print("    [1] - MINUTO")
-        print("    [2] - MINUTOS")
-        print("    [5] - MINUTOS")
-        print("    [10] - MINUTOS")
-        print("    [15] - MINUTOS")
-        print("    [30] - MINUTOS")
-        tempo = input(" > ")
-        tempoGrafReal = int(tempo) * 60
+        tempoMin = tempos[5:11]
+        cont = 0
+        for i in tempoMin:
+            j = int(i/60)
+            if j != 1:
+                plural = 's'
+            else:
+                plural = ''
+            print("    " + str(j), (escala[1] + plural).upper())
+        
+        while tempoGrafReal == "":
+            tempo = input("\n Informe o tempo gráfico: ")
+            for i in tempoMin:
+                j = int(i/60)
+                if tempo == str(j):
+                    if j > 1:
+                        plural = 's'
+                    else:
+                        plural = ''
+                    tempoGrafReal = int(tempo) * 60
+                    tempoGrafInfo = str(tempo) + " " + str(escala[1]) + plural
+
     elif tempoEscala == 2:
-        print("    [1] - HORA")
-        print("    [2] - HORAS")
-        print("    [4] - HORAS")
-        print("    [8] - HORAS")
-        print("    [12] - HORAS")
-        tempo = input(" > ")
-        tempoGrafReal = int(tempo) * 3600
+        tempoHor = tempos[11:16]
+        cont = 0
+        for i in tempoHor:
+            j = int(i/3600)
+            if j > 1:
+                plural = 's'
+            else:
+                plural = ''
+            print("    " + str(j), (escala[2] + plural).upper())
+        
+        while tempoGrafReal == "":
+            tempo = input("\n Informe o tempo gráfico: ")
+            for i in tempoHor:
+                j = int(i/3600)
+                if tempo == str(j):
+                    if j > 1:
+                        plural = 's'
+                    else:
+                        plural = ''
+                    tempoGrafReal = int(tempo) * 3600
+                    tempoGrafInfo = str(tempo) + " " + str(escala[2]) + plural
+                    
     elif tempoEscala == 3:
         tempo = 1
         tempoGrafReal = tempos[16]
+        tempoGrafInfo = str(tempo) + " " + str(escala[3])
     elif tempoEscala == 4:
         tempo = 1
         tempoGrafReal = tempos[17]
+        tempoGrafInfo = str(tempo) + " " + str(escala[4])
     else:
         tempo = 1
         tempoGrafReal = tempos[18]
+        tempoGrafInfo = str(tempo) + " " + str(escala[5])
 
-    tempoGrafInfo = str(tempo) + " " + str(escala[tempoEscala])
-    print(' Tempo gráfico alterado com sucesso para', Fore.GREEN + tempoGrafInfo)
-
-    print(Fore.RED + '\n ... voltando para o menu anterior')
+    print(Fore.LIGHTYELLOW_EX + ' Tempo gráfico alterado para', Fore.GREEN + tempoGrafInfo)
+    print('\n ... voltando para o menu anterior')
     time.sleep(2)
 
 
@@ -338,7 +380,8 @@ def conexao():
     
     time.sleep(2)
     modoOperacao = api.get_balance_mode()
-    caixaInicial = api.get_balance()
+    locale.setlocale(locale.LC_MONETARY, 'pt-BR.UTF-8')
+    caixaInicial = locale.currency(api.get_balance(), grouping=True)
 
 
 ''' Início do programa '''
