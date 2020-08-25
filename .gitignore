@@ -1,7 +1,9 @@
 # Ignorar arquivos
 userdata.py
+*.manifest
+*.egg
 
 # Ignorar pastas
-iqoptionapi/__pycache__ /
-iqoptionapi/backup /
-__pycache__ /
+__pycache__/
+iqoptionapi/__pycache__/
+iqoptionapi/backup/
