@@ -2,5 +2,6 @@
 userdata.py
 
 # Ignorar pastas
-iqoptionapi/__pycache__/
-__pycache__/
+jr-iqoption-auxiliar/iqoptionapi/__pycache__/*
+jr-iqoption-auxiliar/iqoptionapi/backup/*
+jr-iqoption-auxiliar/__pycache__/*
