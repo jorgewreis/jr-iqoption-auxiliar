@@ -25,6 +25,7 @@ tempoGrafReal = 5
 tempoGrafInfo = "5 segundos"
 optionCod = "EURUSD"
 optionType = "BINARY"
+modoOperacao = ""
 
 
 def descProgram():
@@ -50,33 +51,34 @@ def menuPrincipal():
     while menuOp > 0:
         descProgram()
         print('\n MENU PRINCIPAL:')
-        print(' [1] - TRADER')
-        print(' [2] - RANKING')
-        print(' [3] - CONFIGURAÇÕES')
-        print(' [4] - LISTAR PENDENCIAS DAS CONSTANTES')
-        print(Fore.LIGHTRED_EX + '\n [0] - SAIR')
+        print(' [1] - Trader\n')
+        print(' [2] - Buscador')
+        print(' [3] - Opções do Desenvolvedor')
+        print(' [4] - Configurações')
+        
+        print(Fore.LIGHTRED_EX + '\n pressione qualquer outra tecla para sair')
 
         menuOp = int(input('\n Digite o número da opção escolhida: '))
 
         if menuOp == 1:
             print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
             print(Fore.RED + " Erro! Opção não configurada")
-            time.sleep(2)
+            time.sleep(3)
         elif menuOp == 2:
             print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
             funListarRanking()
             time.sleep(2)
-        elif menuOp == 3:
+        elif menuOp == 4:
             print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
             menuConfig()
             time.sleep(2)
-        elif menuOp == 4:
+        elif menuOp == 3:
             print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
             runListarConst()
             time.sleep(2)
         else:
             print(Fore.YELLOW + "\n ... encerrando aplicativo")
-            time.sleep(3)
+            time.sleep(2)
             os.system('cls')
             break
 
@@ -93,7 +95,7 @@ def menuConfig():
         else:
             modoRun = "REAL"
 
-        print(' 2. CONFIGURAÇÕES:')
+        print(' 3. CONFIGURAÇÕES:')
         print('    [1] - Alterar modo de operação para', Fore.LIGHTYELLOW_EX + modoRun)
         print('    [2] - Alterar opção')
         print('    [3] - Alterar tempo do gráfico')
@@ -110,26 +112,20 @@ def menuConfig():
             alteraTempoGrafico()
         menuOp = 1
 
-def avisos():
-    global modoOperacao
-    if modoOperacao == "":
-        modoOperacao = "PRACTICE"
-        print(Fore.LIGHTYELLOW_EX + " ... definindo modo de operação para Treinamento")
-
-
 def alteraModo():
     global modoOperacao, api, caixaInicial
     os.system('cls')
     
     if modoOperacao == "PRACTICE":
         print(Fore.LIGHTYELLOW_EX + " Modo alterado para Real")
-        modoOperacao = "REAL"
-        caixaInicial = api.get_balances()['msg'][0]['amount']
+        api.change_balance("REAL")
+        caixaInicial = locale.currency(api.get_balances()['msg'][0]['amount'], grouping=True)
     else:
         print(Fore.LIGHTYELLOW_EX + " Modo alterado para Treinamento")
-        modoOperacao = "PRACTICE"
-        caixaInicial = api.get_balances()['msg'][1]['amount']
+        api.change_balance("PRACTICE")
+        caixaInicial = locale.currency(api.get_balances()['msg'][1]['amount'], grouping=True)
     print('\n ... voltando para menu anterior')
+    modoOperacao = api.get_balance_mode()
     
     time.sleep(2)
 
@@ -243,7 +239,6 @@ def alteraTempoGrafico():
     print('\n ... voltando para o menu anterior')
     time.sleep(2)
 
-
 def perfil():
     global api
     perfil = json.loads(json.dumps(api.get_profile_ansyc()))
@@ -260,13 +255,9 @@ def timestamp_converter(x, retorno=1):
 def runListarConst():
     n = 1
     while n <= 1400:
-        if api.get_financial_information(n)['msg']['data']['active'] == None:
-            print("' ':", str(n) + ",")
-        else:
+        if api.get_financial_information(n)['msg']['data']['active'] != None:
             option = api.get_financial_information(n)['msg']['data']['active']['name']
             print("'" + option.upper() + "':", str(n) + ",")
-            
-            
         n = n + 1
     
     listarNovamente()
@@ -380,12 +371,12 @@ def conexao():
     
     time.sleep(2)
     modoOperacao = api.get_balance_mode()
+    
     locale.setlocale(locale.LC_MONETARY, 'pt-BR.UTF-8')
     caixaInicial = locale.currency(api.get_balance(), grouping=True)
+    menuPrincipal()
 
 
 ''' Início do programa '''
 conexao()
-avisos()
-menuPrincipal()
 Logout(api)
