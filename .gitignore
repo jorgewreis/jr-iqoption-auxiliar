@@ -4,6 +4,6 @@ userdata.py
 *.egg
 
 # Ignorar pastas
-__pycache__/
-iqoptionapi/__pycache__/
-iqoptionapi/backup/
+__pycache__/*
+iqoptionapi/__pycache__/*
+iqoptionapi/backup/*
