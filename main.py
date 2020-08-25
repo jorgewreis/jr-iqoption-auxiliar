@@ -45,37 +45,35 @@ def descPainel():
     print("Modo: ", Fore.GREEN + modoOperacaoPainel, "    Caixa: ", Fore.GREEN + str(caixaInicial), "    Opção: ", Fore.GREEN + str(optionType), "/", Fore.GREEN + str(optionCod), "    Tempo do gráfico:", Fore.GREEN + tempoGrafInfo + "\n")
 
 
+
 def menuPrincipal():
     global menuOp
     menuOp = 1
-    while menuOp > 0:
+    while menuOp != 0:
         descProgram()
         print('\n MENU PRINCIPAL:')
-        print(' [1] - Trader\n')
-        print(' [2] - Buscador')
-        print(' [3] - Opções do Desenvolvedor')
+        print('\n [1] - Trader (Copy / MHI / Candles)\n')
+        print(' [2] - Buscador (Traders / Ranking / Payout / Opções')
+        print(' [3] - Opções do Desenvolvedor (Atualizar Ativos)')
         print(' [4] - Configurações')
         
         print(Fore.LIGHTRED_EX + '\n pressione qualquer outra tecla para sair')
 
-        menuOp = int(input('\n Digite o número da opção escolhida: '))
+        menuOp = input('\n Digite o número da opção escolhida: ')
 
-        if menuOp == 1:
+        if menuOp == '1':
             print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
             print(Fore.RED + " Erro! Opção não configurada")
             time.sleep(3)
-        elif menuOp == 2:
-            print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
-            funListarRanking()
-            time.sleep(2)
-        elif menuOp == 4:
-            print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
+        elif menuOp == '2':
+            menuBuscador()
+            time.sleep(1)
+        elif menuOp == '4':
             menuConfig()
-            time.sleep(2)
-        elif menuOp == 3:
-            print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
-            runListarConst()
-            time.sleep(2)
+            time.sleep(1)
+        elif menuOp == '3':
+            menuDev()
+            time.sleep(1)
         else:
             print(Fore.YELLOW + "\n ... encerrando aplicativo")
             time.sleep(2)
@@ -95,22 +93,69 @@ def menuConfig():
         else:
             modoRun = "REAL"
 
-        print(' 3. CONFIGURAÇÕES:')
+        print(' 4. CONFIGURAÇÕES:\n')
         print('    [1] - Alterar modo de operação para', Fore.LIGHTYELLOW_EX + modoRun)
         print('    [2] - Alterar opção')
         print('    [3] - Alterar tempo do gráfico')
 
-        print(Fore.LIGHTRED_EX + '\n    [0] - VOLTAR AO MENU PRINCIPAL')
+        print(Fore.LIGHTRED_EX + '\n    pressione qualquer outra tecla para voltar')
 
-        confOp = int(input("\n Digite o número da opção escolhida: "))
-
-        if confOp == 1:
+        confOp = input("\n Digite o número da opção escolhida: ")
+        if confOp == '1':
             alteraModo()
-        elif confOp == 2:
+        elif confOp == '2':
             alteraOption()
-        elif confOp == 3:
+        elif confOp == '3':
             alteraTempoGrafico()
+        else:
+            break
+        
         menuOp = 1
+
+def menuBuscador():
+    global modoOperacao, menuOp
+    confOp = 1
+
+    while confOp != 0:
+        descProgram()
+        
+        print('\n 2. BUSCAR:\n')
+        print('    [1] - Buscar Ranking de traders')
+
+        print(Fore.LIGHTRED_EX + '\n    pressione qualquer outra tecla para voltar')
+
+        confOp = input("\n Digite o número da opção escolhida: ")
+        if confOp == '1':
+            print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
+            funListarRanking()
+            time.sleep(2)
+        else:
+            break
+        
+        menuOp = 1
+
+def menuDev():
+    global modoOperacao, menuOp
+    confOp = 1
+
+    while confOp != 0:
+        descProgram()
+        
+        print('\n 3. DESENVOLVEDOR:\n')
+        print('    [1] - Atualizar lista de ativos')
+
+        print(Fore.LIGHTRED_EX + '\n    pressione qualquer outra tecla para voltar')
+
+        confOp = input("\n Digite o número da opção escolhida: ")
+        if confOp == '1':
+            print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
+            runListarConst()
+            time.sleep(2)
+        else:
+            break
+        
+        menuOp = 1
+        
 
 def alteraModo():
     global modoOperacao, api, caixaInicial
@@ -369,7 +414,7 @@ def conexao():
             print(Fore.LIGHTGREEN_EX + "\n     conectado com sucesso!")
             break
     
-    time.sleep(2)
+    time.sleep(1)
     modoOperacao = api.get_balance_mode()
     
     locale.setlocale(locale.LC_MONETARY, 'pt-BR.UTF-8')
