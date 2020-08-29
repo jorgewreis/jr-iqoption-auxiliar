@@ -26,10 +26,14 @@ tempoGrafInfo = "5 segundos"
 optionCod = "EURUSD"
 optionType = "BINARY"
 modoOperacao = ""
+optionsOpen = []
+optionsTop = []
+payoutMaior = ""
+payoutMaiorValor = ""
 
-
+''' DESCRIÇÕES DO APLICATIVO '''
 def descProgram():
-    version = "1.02.04 Build 10"
+    version = "1.03.01 Build 11"
     appname = "IQ Option Auxiliar - Jorge Reis "
     os.system('cls')
     print("APP " + appname + "   Versão: " + version)
@@ -45,7 +49,7 @@ def descPainel():
     print("Modo: ", Fore.GREEN + modoOperacaoPainel, "    Caixa: ", Fore.GREEN + str(caixaInicial), "    Opção: ", Fore.GREEN + str(optionType), "/", Fore.GREEN + str(optionCod), "    Tempo do gráfico:", Fore.GREEN + tempoGrafInfo + "\n")
 
 
-
+''' MENUS DO APLICATIVO '''
 def menuPrincipal():
     global menuOp
     menuOp = 1
@@ -120,14 +124,19 @@ def menuBuscador():
         descProgram()
         
         print('\n 2. BUSCAR:\n')
-        print('    [1] - Buscar Ranking de traders')
+        print('    [2] - Buscar Ranking de traders')
+        print('    [3] - Buscar Payouts')
 
         print(Fore.LIGHTRED_EX + '\n    pressione qualquer outra tecla para voltar')
 
         confOp = input("\n Digite o número da opção escolhida: ")
-        if confOp == '1':
+        if confOp == '2':
             print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
             funListarRanking()
+            time.sleep(2)
+        elif confOp == '3':
+            print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
+            funListarPayouts()
             time.sleep(2)
         else:
             break
@@ -149,14 +158,15 @@ def menuDev():
         confOp = input("\n Digite o número da opção escolhida: ")
         if confOp == '1':
             print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
-            runListarConst()
+            funListarConst()
             time.sleep(2)
         else:
             break
         
         menuOp = 1
-        
 
+        
+''' FUNÇÕES DE CONFIGURAÇÃO '''
 def alteraModo():
     global modoOperacao, api, caixaInicial
     os.system('cls')
@@ -284,12 +294,92 @@ def alteraTempoGrafico():
     print('\n ... voltando para o menu anterior')
     time.sleep(2)
 
+
+''' FUNÇÕES INTERNAS '''
 def perfil():
     global api
     perfil = json.loads(json.dumps(api.get_profile_ansyc()))
 	
     return perfil
 
+def payouts(asset, tipo, timeframe=1):
+    if tipo == 'turbo':
+        a = api.get_all_profit()
+        return int(100 * a[asset]['turbo'])
+
+    elif tipo == 'digital':
+        api.subscribe_strike_list(asset, timeframe)
+
+        while True:
+            d = api.get_digital_current_profit(asset, timeframe)
+            if d != False:
+                d = int(1 * d)
+                break
+            time.sleep(0.2)
+
+        api.unsubscribe_strike_list(asset, timeframe)
+        return d
+
+def listarPayouts(mostrar, quais):
+    global payoutMaiorValor, payoutMaior, optionsTop, optionsOpen
+    options = api.get_all_open_time()
+    
+    if quais == '1' or quais == '3':
+        if mostrar == '1':
+            print('\n    BINÁRIAS:')
+        for option in options['turbo']:
+            if options['turbo'][option]['open']:
+                if payoutMaior == "":
+                        payoutMaior = option
+                        payoutMaiorValor = payouts(option, 'turbo')
+                        
+                if payouts(option, 'turbo') < 80:
+                    if mostrar == '1':
+                        print('    ' + option + ' - ' + str(payouts(option, 'turbo')) + '%')
+                    optionsOpen.append(option)
+                else:
+                    if payouts(option, 'turbo') > payoutMaiorValor:
+                        if mostrar == '1':
+                            print(Fore.GREEN + ' >> ' + option + ' - ' + str(payouts(option, 'turbo')) + '%')
+                        payoutMaior = option
+                        payoutMaiorValor = payouts(option, 'turbo')
+                    else: 
+                        if mostrar == '1':
+                            print(Fore.GREEN + '  > ' + option + ' - ' + str(payouts(option, 'turbo')) + '%')
+                    
+                    optionsOpen.append(option)
+                    optionsTop.append(payouts(option, 'turbo'))
+                if mostrar == '1':
+                    if optionsOpen == []:
+                        print('\n Não foi encontrada nenhuma opção aberta para operações no momento')
+                    
+    if quais == '2' or quais == '3':
+        if mostrar == '1':
+            print('\n    DIGITAIS:')
+        
+        for option in options['digital']:
+            if options['digital'][option]['open']:
+                if payoutMaior == "":
+                        payoutMaior = option
+                        payoutMaiorValor = payouts(option, 'digital')
+                
+                if payouts(option, 'digital') < 80:
+                    if mostrar == '1':
+                        print('    ' + option + ' - ' + str(payouts(option, 'digital')) + '%')
+                    optionsOpen.append(option)
+                else:
+                    if payouts(option, 'digital') > payoutMaiorValor:
+                        if mostrar == '1':
+                            print(Fore.GREEN + ' >> ' + option + ' - ' + str(payouts(option, 'digital')) + '%')
+                        payoutMaior = option
+                        payoutMaiorValor = payouts(option, 'digital')
+                    else: 
+                        if mostrar == '1':
+                            print(Fore.GREEN + '  > ' + option + ' - ' + str(payouts(option, 'digital')) + '%')
+                    
+                    optionsOpen.append(option)
+                    optionsTop.append(payouts(option, 'digital'))
+                
 def timestamp_converter(x, retorno=1):
     hora = datetime.strptime(datetime.utcfromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S'), '%Y-%m-%d %H:%M:%S')
     hora = hora.replace(tzinfo=tz.gettz('GMT'))
@@ -297,7 +387,9 @@ def timestamp_converter(x, retorno=1):
     return str(hora.astimezone(tz.gettz('America/Sao Paulo')))[:-6] if retorno == 1 else hora.astimezone(
         tz.gettz('America/Sao Paulo'))
 
-def runListarConst():
+
+''' FUNÇÕES PRINCIPAIS '''
+def funListarConst():
     n = 1
     while n <= 1400:
         if api.get_financial_information(n)['msg']['data']['active'] != None:
@@ -306,22 +398,6 @@ def runListarConst():
         n = n + 1
     
     listarNovamente()
-
-def runConfTeste():
-    global api, optionCod
-
-    op = str(input("Informe a operação: [1] Compra  |  [2] Venda ? "))
-    if op == 1:
-        direction = "call"
-        dir = "Compra"
-    else:
-        direction = "put"
-        dir = "Venda"
-
-    entrada = int(input("Informe o valor da entrada: "))
-    api.buy(entrada, optionCod, direction, 1)
-    print("\n", Fore.GREEN + dir, "de", optionCod, "no valor de R$", round(entrada, 2))
-    time.sleep(3)
 
 def funListarRanking():
     global api, menuOp2
@@ -387,6 +463,39 @@ def funListarRanking():
         
         listarNovamente()
 
+def funListarPayouts():
+    global payoutMaior, payoutMaiorValor
+    os.system('cls')
+    
+    mostrar = input(' Deseja mostrar os resultados? [1] Sim \n > ')
+    quais = input('\n Quais opções deseja buscar? [1] Binárias | [2] Digitais | [3] Ambas \n > ')
+    os.system('cls')
+    print('\n    BUSCADOR - PAYOUTS')
+    print('\n    Listando payouts... \n')
+    listarPayouts(mostrar, quais)
+    
+    listarNovamente()
+    
+
+                
+
+''' FUNÇÕES AUXILIARES '''
+def funConfTeste():
+    global api, optionCod
+
+    op = str(input("Informe a operação: [1] Compra  |  [2] Venda ? "))
+    if op == 1:
+        direction = "call"
+        dir = "Compra"
+    else:
+        direction = "put"
+        dir = "Venda"
+
+    entrada = int(input("Informe o valor da entrada: "))
+    api.buy(entrada, optionCod, direction, 1)
+    print("\n", Fore.GREEN + dir, "de", optionCod, "no valor de R$", round(entrada, 2))
+    time.sleep(3)
+
 def listarNovamente():
     global menuOp2
     op2 = input('\n Deseja listar novamente? [S] SIM | [N] Não ')
@@ -398,7 +507,6 @@ def listarNovamente():
 
 
 ''' Definições finais antes de iniciar '''
-
 def conexao():
     global api, user, caixaInicial, modoOperacao
     os.system('cls')
