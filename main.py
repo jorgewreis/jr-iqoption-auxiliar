@@ -56,7 +56,7 @@ def menuPrincipal():
     while menuOp != 0:
         descProgram()
         print('\n MENU PRINCIPAL:')
-        print('\n [1] - Trader (Copy / MHI / Candles)\n')
+        print('\n [1] - Trader (Copy / MHI / Candles / Full Auxiliar / Full Robot)\n')
         print(' [2] - Buscador (Traders / Ranking / Payout / Opções')
         print(' [3] - Opções do Desenvolvedor (Atualizar Ativos)')
         print(' [4] - Configurações')
@@ -66,9 +66,8 @@ def menuPrincipal():
         menuOp = input('\n Digite o número da opção escolhida: ')
 
         if menuOp == '1':
-            print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
-            print(Fore.RED + " Erro! Opção não configurada")
-            time.sleep(3)
+            menuTrader()
+            time.sleep(1)
         elif menuOp == '2':
             menuBuscador()
             time.sleep(1)
@@ -83,6 +82,34 @@ def menuPrincipal():
             time.sleep(2)
             os.system('cls')
             break
+
+def menuTrader():
+    global modoOperacao, menuOp
+    confOp = 1
+
+    while confOp != 0:
+        descProgram()
+        
+        print('\n 1. TRADER:\n')
+        #print('    [1] - Copy Trader')
+        #print('    [2] - MHI Trader')
+        #print('    [3] - Candles')
+        #print('    [4] - Full Auxiliar')
+        #print('    [5] - Full Robot')
+
+        print(Fore.LIGHTRED_EX + '\n    pressione qualquer outra tecla para voltar')
+
+        confOp = input("\n Digite o número da opção escolhida: ")
+        if confOp == '2':
+            print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
+            time.sleep(2)
+        elif confOp == '3':
+            print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
+            time.sleep(2)
+        else:
+            break
+        
+        menuOp = 1
 
 def menuConfig():
     global modoOperacao, menuOp
@@ -124,8 +151,10 @@ def menuBuscador():
         descProgram()
         
         print('\n 2. BUSCAR:\n')
+        #print('    [1] - Buscar Traders')
         print('    [2] - Buscar Ranking de traders')
         print('    [3] - Buscar Payouts')
+        #print('    [4] - Buscar Opções abertas')
 
         print(Fore.LIGHTRED_EX + '\n    pressione qualquer outra tecla para voltar')
 
@@ -337,6 +366,7 @@ def listarPayouts(mostrar, quais):
                     if mostrar == '1':
                         print('    ' + option + ' - ' + str(payouts(option, 'turbo')) + '%')
                     optionsOpen.append(option)
+                    optionsTop.append(payouts(option, 'turbo'))
                 else:
                     if payouts(option, 'turbo') > payoutMaiorValor:
                         if mostrar == '1':
@@ -367,6 +397,7 @@ def listarPayouts(mostrar, quais):
                     if mostrar == '1':
                         print('    ' + option + ' - ' + str(payouts(option, 'digital')) + '%')
                     optionsOpen.append(option)
+                    optionsTop.append(payouts(option, 'digital'))
                 else:
                     if payouts(option, 'digital') > payoutMaiorValor:
                         if mostrar == '1':
@@ -379,6 +410,11 @@ def listarPayouts(mostrar, quais):
                     
                     optionsOpen.append(option)
                     optionsTop.append(payouts(option, 'digital'))
+    optionsBest = {'option': optionsOpen, 'payout': optionsTop}
+    
+    if mostrar == '1':
+        print('\n Opções mais rentáveis: ', optionsBest['option'])
+    
                 
 def timestamp_converter(x, retorno=1):
     hora = datetime.strptime(datetime.utcfromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S'), '%Y-%m-%d %H:%M:%S')
