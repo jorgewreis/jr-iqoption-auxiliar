@@ -4,7 +4,7 @@ import iqoptionapi.country_id as Paises
 import time
 import json
 import os
-import collections
+from collections import Counter
 import logging
 import locale
 from colorama import init, Fore, Back, Style
@@ -33,7 +33,7 @@ payoutMaiorValor = ""
 
 ''' DESCRIÇÕES DO APLICATIVO '''
 def descProgram():
-    version = "1.03.01 Build 11"
+    version = "1.04.01 Build 12"
     appname = "IQ Option Auxiliar - Jorge Reis "
     os.system('cls')
     print("APP " + appname + "   Versão: " + version)
@@ -94,16 +94,26 @@ def menuTrader():
         #print('    [1] - Copy Trader')
         #print('    [2] - MHI Trader')
         #print('    [3] - Candles')
-        #print('    [4] - Full Auxiliar')
+        print('    [4] - Full Auxiliar')
         #print('    [5] - Full Robot')
 
         print(Fore.LIGHTRED_EX + '\n    pressione qualquer outra tecla para voltar')
 
         confOp = input("\n Digite o número da opção escolhida: ")
-        if confOp == '2':
+        if confOp == '1':
+            print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
+            time.sleep(2)
+        elif confOp == '2':
             print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
             time.sleep(2)
         elif confOp == '3':
+            print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
+            time.sleep(2)
+        elif confOp == '4':
+            print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
+            funFullAuxiliar()
+            time.sleep(2)
+        elif confOp == '5':
             print(Fore.LIGHTYELLOW_EX + '\n ... abrindo opção selecionada')
             time.sleep(2)
         else:
@@ -391,31 +401,31 @@ def listarPayouts(mostrar, quais):
             if options['digital'][option]['open']:
                 if payoutMaior == "":
                         payoutMaior = option
-                        payoutMaiorValor = payouts(option, 'digital')
+                        payoutMaiorValor = int(payouts(option, 'digital'))
                 
                 if payouts(option, 'digital') < 80:
                     if mostrar == '1':
                         print('    ' + option + ' - ' + str(payouts(option, 'digital')) + '%')
                     optionsOpen.append(option)
-                    optionsTop.append(payouts(option, 'digital'))
+                    optionsTop.append(int(payouts(option, 'digital')))
                 else:
                     if payouts(option, 'digital') > payoutMaiorValor:
                         if mostrar == '1':
                             print(Fore.GREEN + ' >> ' + option + ' - ' + str(payouts(option, 'digital')) + '%')
                         payoutMaior = option
-                        payoutMaiorValor = payouts(option, 'digital')
+                        payoutMaiorValor = int(payouts(option, 'digital'))
                     else: 
                         if mostrar == '1':
                             print(Fore.GREEN + '  > ' + option + ' - ' + str(payouts(option, 'digital')) + '%')
                     
                     optionsOpen.append(option)
-                    optionsTop.append(payouts(option, 'digital'))
-    optionsBest = {'option': optionsOpen, 'payout': optionsTop}
+                    optionsTop.append(int(payouts(option, 'digital')))
+    optionsBest = {optionsOpen, optionsTop}
+    #a = Counter(optionsBest)
     
     if mostrar == '1':
-        print('\n Opções mais rentáveis: ', optionsBest['option'])
-    
-                
+        print('\n Opções mais rentáveis: ', optionsBest)
+                    
 def timestamp_converter(x, retorno=1):
     hora = datetime.strptime(datetime.utcfromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S'), '%Y-%m-%d %H:%M:%S')
     hora = hora.replace(tzinfo=tz.gettz('GMT'))
@@ -482,7 +492,7 @@ def funListarRanking():
                     infoVip = ""
                                                     
                 print('\n', str(n) + ".", Fore.GREEN + traderPerfil, Fore.GREEN + infoVip + '● online', '(' + traderPais + ') - ID:', traderId)
-                if traderOption != "":
+                if traderOptionType != "":
                     print('     operando agora', traderOptionType, "-", traderOption)
                                     
                 tradersOnline.append(traderId)
@@ -511,9 +521,37 @@ def funListarPayouts():
     listarPayouts(mostrar, quais)
     
     listarNovamente()
-    
 
-                
+def funFullAuxiliar():
+    global timeRun, cont, menuOp2
+    menuOp2 = 1
+    cont = 0
+    timeRun = 0
+    
+    descProgram()
+    descPainel()
+    print('    1. TRADER')
+    print('       4. Full Auxiliar Trading\n')
+    
+    while menuOp2 == 1:
+        timeOp = int(input(' Informe por quantos minutos deseja operar: '))
+        if timeOp == 0:
+            timeRun = 1440
+            print(' Operando por 12 horas')
+        else:
+            timeRun = timeOp * 2
+            print(' Operando por', timeOp, 'minutos')
+        
+        print('\n    ... analisando candles \n')
+        
+        while cont <= timeRun:
+            cont += 1
+            print('  T:', calcularTendencia())
+        else:
+            cont = 0
+            print('\n   Encerrando operação!')
+
+        listarNovamente()
 
 ''' FUNÇÕES AUXILIARES '''
 def funConfTeste():
@@ -531,6 +569,64 @@ def funConfTeste():
     api.buy(entrada, optionCod, direction, 1)
     print("\n", Fore.GREEN + dir, "de", optionCod, "no valor de R$", round(entrada, 2))
     time.sleep(3)
+
+def calcularTendencia():
+    global tempoGrafReal, candleId, menu
+    candleTemp = 1
+    candleIdd = 0
+    candleId = 0
+    candlesIds = []
+    perCurto = 10
+    perLongo = 40
+    
+    candle = api.get_candles(optionCod, (int(tempoGrafReal) * 60), 5, time.time())    
+    for i in candle:
+        candlesIds.append(i['id'])
+        
+    candleTemp = candlesIds[4]
+
+    velasCurto = api.get_candles(optionCod, (int(tempoGrafReal) * 60), perCurto,  time.time())
+    priCurto = round(velasCurto[1]['close'], 4)
+    ultCurto = round(velasCurto[9]['close'], 4)
+    percCurto = abs(round(((ultCurto - priCurto) / priCurto) * 1000, 3))
+
+    velasLongo = api.get_candles(optionCod, (int(tempoGrafReal) * 60), perLongo,  time.time())
+    priLongo = round(velasLongo[1]['close'], 4)
+    ultLongo = round(velasLongo[39]['close'], 4)
+    percLongo = abs(round(((ultLongo - priLongo) / priLongo) * 100, 3))
+
+    if ultLongo > priLongo:
+        if percLongo > 0.2:
+            tendencia = Fore.GREEN + '▲ ▲'
+        else:
+            if ultCurto < priCurto:
+                if percCurto > 0.2:
+                    tendencia = Fore.GREEN + '▲' + Fore.RED + ' ▼'
+                else:
+                    tendencia = Fore.GREEN + '▲' + Fore.RED + ' ■'
+            else:
+                tendencia = Fore.GREEN + '▲'
+    else:
+        if percLongo > 0.2:
+            tendencia = Fore.RED + '▼ ▼'
+        else:
+            if ultCurto < priCurto:
+                if percCurto > 0.2:
+                    tendencia = Fore.RED + '▼' + Fore.GREEN + ' ▲'
+                else:
+                    tendencia = Fore.RED + '▼' + Fore.GREEN + ' ■'
+            else:
+                tendencia = Fore.RED + '▼'
+                
+    ''' LOOP POR ID '''
+    while candleTemp >= candleId:
+        candle = api.get_candles(optionCod, (int(tempoGrafReal)), 3, time.time())
+        candleId = int(candle[1]['id'])
+        time.sleep(1)
+
+    api.stop_candles_stream(optionCod, tempoGrafReal)
+    
+    return tendencia
 
 def listarNovamente():
     global menuOp2
