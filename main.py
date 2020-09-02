@@ -21,8 +21,8 @@ init(convert=True, autoreset=True)
 
 ''' Definições iniciais '''
 valordeEntrada = 1
-tempoGrafReal = 5
-tempoGrafInfo = "5 segundos"
+tempoGrafReal = 30
+tempoGrafInfo = "30 segundos"
 optionCod = "EURUSD"
 optionType = "BINARY"
 modoOperacao = ""
@@ -267,7 +267,7 @@ def alteraTempoGrafico():
             tempo = input("\n Informe o tempo gráfico: ")
             for i in tempoSeg:
                 if tempo == str(i):
-                    tempoGrafReal = tempo
+                    tempoGrafReal = int(tempo)
                     tempoGrafInfo = str(tempo) + " " + str(escala[0]) + plural
                     
     elif tempoEscala == 1:
@@ -523,7 +523,7 @@ def funListarPayouts():
     listarNovamente()
 
 def funFullAuxiliar():
-    global timeRun, cont, menuOp2
+    global timeRun, cont, menuOp2, tempoGrafReal
     menuOp2 = 1
     cont = 0
     timeRun = 0
@@ -539,14 +539,18 @@ def funFullAuxiliar():
             timeRun = 1440
             print(' Operando por 12 horas')
         else:
-            timeRun = timeOp * 2
-            print(' Operando por', timeOp, 'minutos')
+            timeRun = timeOp * 60 / int(tempoGrafReal)
+            if timeOp == 1:
+                print(' Operando por 1 minuto')
+            else:
+                print(' Operando por', timeOp, 'minutos')
         
         print('\n    ... analisando candles \n')
         
         while cont <= timeRun:
             cont += 1
-            print('  T:', calcularTendencia())
+            dados = calcularTendencia()
+            print('  T:', dados[0], '  ID:', dados[1])
         else:
             cont = 0
             print('\n   Encerrando operação!')
@@ -572,27 +576,39 @@ def funConfTeste():
 
 def calcularTendencia():
     global tempoGrafReal, candleId, menu
+    timeTemp = 2 #2 / 5 / 15 / 30 / 180 / 720
     candleTemp = 1
-    candleIdd = 0
     candleId = 0
     candlesIds = []
     perCurto = 10
     perLongo = 40
+    tempo = time.time()
     
-    candle = api.get_candles(optionCod, (int(tempoGrafReal) * 60), 5, time.time())    
-    for i in candle:
+    if int(tempoGrafReal) <= 15:
+        timeTemp = 2
+    elif int(tempoGrafReal) <= 60:
+        timeTemp = 5
+    elif int(tempoGrafReal) <= 120:
+        timeTemp = 15
+    elif int(tempoGrafReal) <= 300:
+        timeTemp = 30
+    elif int(tempoGrafReal) <= 900:
+        timeTemp = 180
+    else:
+        timeTemp = 720
+        
+    velasCurto = api.get_candles(optionCod, int(tempoGrafReal), perCurto, tempo)
+    priCurto = round(velasCurto[1]['close'], 4)
+    ultCurto = round(velasCurto[perCurto-1]['close'], 4)
+    percCurto = abs(round(((ultCurto - priCurto) / priCurto) * 1000, 3))
+    for i in velasCurto:
         candlesIds.append(i['id'])
         
-    candleTemp = candlesIds[4]
+    candleTemp = candlesIds[perCurto-1]    
 
-    velasCurto = api.get_candles(optionCod, (int(tempoGrafReal) * 60), perCurto,  time.time())
-    priCurto = round(velasCurto[1]['close'], 4)
-    ultCurto = round(velasCurto[9]['close'], 4)
-    percCurto = abs(round(((ultCurto - priCurto) / priCurto) * 1000, 3))
-
-    velasLongo = api.get_candles(optionCod, (int(tempoGrafReal) * 60), perLongo,  time.time())
+    velasLongo = api.get_candles(optionCod, int(tempoGrafReal), perLongo, tempo)
     priLongo = round(velasLongo[1]['close'], 4)
-    ultLongo = round(velasLongo[39]['close'], 4)
+    ultLongo = round(velasLongo[perLongo-1]['close'], 4)
     percLongo = abs(round(((ultLongo - priLongo) / priLongo) * 100, 3))
 
     if ultLongo > priLongo:
@@ -619,14 +635,15 @@ def calcularTendencia():
                 tendencia = Fore.RED + '▼'
                 
     ''' LOOP POR ID '''
-    while candleTemp >= candleId:
-        candle = api.get_candles(optionCod, (int(tempoGrafReal)), 3, time.time())
+    while candleTemp > candleId:
+        calc = int(tempoGrafReal/3)
+        time.sleep(calc)
+        candle = api.get_candles(optionCod, int(tempoGrafReal), 3, time.time())
         candleId = int(candle[1]['id'])
-        time.sleep(1)
 
     api.stop_candles_stream(optionCod, tempoGrafReal)
     
-    return tendencia
+    return tendencia, candleId
 
 def listarNovamente():
     global menuOp2

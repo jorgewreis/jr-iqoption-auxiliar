@@ -30,7 +30,7 @@ api.change_balance('PRACTICE') # PRACTICE / REAL
 optionCod = 'EURUSD'
 
 
-timeframe = 5
+timeframe = 2
 perCurto = 10
 perLongo = 40
 
@@ -44,7 +44,7 @@ priLongo = round(velasLongo[1]['close'], 4)
 ultLongo = round(velasLongo[perLongo-1]['close'], 4)
 percLongo = abs(round(((ultLongo - priLongo) / priLongo) * 100, 3))
 
-print('\nFechamento da última vela = {} e da vela 41 = {}'.format(ultLongo, priLongo))
+print('\nFechamento da última vela = {} e da vela {} = {}'.format(ultLongo, perLongo, priLongo))
 print('Longo em', str(percLongo) + "%\n")
 if ultLongo > priLongo:
    if percLongo > 0.2:
