@@ -21,8 +21,8 @@ init(convert=True, autoreset=True)
 
 ''' Definições iniciais '''
 valordeEntrada = 1
-tempoGrafReal = 30
-tempoGrafInfo = "30 segundos"
+tempoGrafReal = 15
+tempoGrafInfo = "15 segundos"
 optionCod = "EURUSD"
 optionType = "BINARY"
 modoOperacao = ""
@@ -33,7 +33,7 @@ payoutMaiorValor = ""
 
 ''' DESCRIÇÕES DO APLICATIVO '''
 def descProgram():
-    version = "1.04.01 Build 12"
+    version = "1.04.03 Build 14"
     appname = "IQ Option Auxiliar - Jorge Reis "
     os.system('cls')
     print("APP " + appname + "   Versão: " + version)
@@ -549,8 +549,8 @@ def funFullAuxiliar():
         
         while cont <= timeRun:
             cont += 1
-            dados = calcularTendencia()
-            print('  T:', dados[0], '  ID:', dados[1])
+            tend = calcularTendencia()            
+            print(tend[0], tend[1], tend[2], tend[3])
         else:
             cont = 0
             print('\n   Encerrando operação!')
@@ -579,7 +579,15 @@ def calcularTendencia():
     timeTemp = 2 #2 / 5 / 15 / 30 / 180 / 720
     candleTemp = 1
     candleId = 0
+    candlesOpen = []
+    candlesClose = []
+    candleIdd = 0
+    vela = ''
+    update = 0
+    supres = ''
+    supres_valor = 0
     candlesIds = []
+    candleTipo = []
     perCurto = 10
     perLongo = 40
     tempo = time.time()
@@ -603,6 +611,14 @@ def calcularTendencia():
     percCurto = abs(round(((ultCurto - priCurto) / priCurto) * 1000, 3))
     for i in velasCurto:
         candlesIds.append(i['id'])
+        candlesOpen.append(i['open'])
+        candlesClose.append(i['close'])
+        if i['open'] < i['close']:
+            candleTipo.append("GREEN")
+        elif i['open'] > i['close']:
+            candleTipo.append("RED")
+        else:
+            candleTipo.append("WHITE")
         
     candleTemp = candlesIds[perCurto-1]    
 
@@ -613,26 +629,34 @@ def calcularTendencia():
 
     if ultLongo > priLongo:
         if percLongo > 0.2:
-            tendencia = Fore.GREEN + '▲ ▲'
+            tendencia = Fore.GREEN + '▲ ▲ ▲'
         else:
-            if ultCurto < priCurto:
+            if ultCurto < priCurto and candleTipo[perCurto-1] == "RED":
                 if percCurto > 0.2:
-                    tendencia = Fore.GREEN + '▲' + Fore.RED + ' ▼'
+                    tendencia = Fore.GREEN + '▲ ▲' + Fore.RED + ' ▼'
                 else:
-                    tendencia = Fore.GREEN + '▲' + Fore.RED + ' ■'
+                    tendencia = Fore.GREEN + '▲ ' + Fore.RED + '▼ ▼'
             else:
-                tendencia = Fore.GREEN + '▲'
+                tendencia = Fore.GREEN + '▲ ▲  '
     else:
         if percLongo > 0.2:
-            tendencia = Fore.RED + '▼ ▼'
+            tendencia = Fore.RED + '▼ ▼ ▼'
         else:
-            if ultCurto < priCurto:
+            if ultCurto < priCurto and candleTipo[perCurto-1] == "GREEN":
                 if percCurto > 0.2:
-                    tendencia = Fore.RED + '▼' + Fore.GREEN + ' ▲'
+                    tendencia = Fore.RED + '▼ ▼' + Fore.GREEN + ' ▲'
                 else:
-                    tendencia = Fore.RED + '▼' + Fore.GREEN + ' ■'
+                    tendencia = Fore.RED + '▼ ' + Fore.GREEN + '▲ ▲'
             else:
-                tendencia = Fore.RED + '▼'
+                tendencia = Fore.RED + '▼ ▼  '
+    
+    if candleIdd == 0:
+        if candleTipo[perCurto-1] == "GREEN":
+            vela = Fore.GREEN + '    ■ ' + Fore.GREEN + str(candlesIds[perCurto-1]) + ' - ' + str(round(candlesOpen[perCurto-1], 4)) + ' > ' + str(round(candlesClose[perCurto-1], 6))
+        elif candleTipo[perCurto-1] == "RED":
+            vela = Fore.RED + '    ■ ' + Fore.RED + str(candlesIds[perCurto-1]) + ' - ' + str(round(candlesOpen[perCurto-1], 4)) + ' > ' + str(round(candlesClose[perCurto-1], 6))
+        else:
+            vela = '    ■ ' + str(candlesIds[perCurto-1]) + ' - ' + str(round(candlesOpen[perCurto-1], 4)) + ' > ' + str(round(candlesClose[perCurto-1], 6))
                 
     ''' LOOP POR ID '''
     while candleTemp > candleId:
@@ -643,7 +667,36 @@ def calcularTendencia():
 
     api.stop_candles_stream(optionCod, tempoGrafReal)
     
-    return tendencia, candleId
+    sr = suportes(optionCod)
+        
+    if candleTipo[9] == "GREEN":
+        supres = '    Res. em'
+        if sr['r2'] < velasCurto[9]['close']:
+            supres_valor = round(sr['r3'], 4)
+        elif sr['r1'] < velasCurto[9]['close']:
+            supres_valor = round(sr['r2'], 4)
+        else:
+            supres_valor = round(sr['r1'], 4)
+    else:
+        supres = '    Sup. em'
+        if sr['s2'] > velasCurto[9]['close']:
+            supres_valor = round(sr['s3'], 4)
+        elif sr['s1'] > velasCurto[9]['close']:
+            supres_valor = round(sr['s2'], 4)
+        else:
+            supres_valor = round(sr['s1'], 4)
+     
+    return tendencia, supres, supres_valor, vela
+
+def suportes(optionCod, tempoGrafReal = 60):
+    indicators = api.get_technical_indicators(optionCod)
+
+    sr = {}
+    for dados in indicators:
+        if dados['candle_size'] == (int(tempoGrafReal)) and 'Classic' in dados['name']:
+            sr.update({dados['name'].replace('Classic ', ''): dados['value']})
+
+    return sr
 
 def listarNovamente():
     global menuOp2

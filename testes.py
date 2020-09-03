@@ -33,42 +33,16 @@ optionCod = 'EURUSD'
 timeframe = 2
 perCurto = 10
 perLongo = 40
+tempoGrafReal = 60
 
-velasCurto = api.get_candles(optionCod, (int(timeframe) * 60), perCurto,  time.time())
-priCurto = round(velasCurto[1]['close'], 4)
-ultCurto = round(velasCurto[perCurto-1]['close'], 4)
-percCurto = abs(round(((ultCurto - priCurto) / priCurto) * 1000, 3))
+indicators = api.get_technical_indicators(optionCod)
 
-velasLongo = api.get_candles(optionCod, (int(timeframe) * 60), perLongo,  time.time())
-priLongo = round(velasLongo[1]['close'], 4)
-ultLongo = round(velasLongo[perLongo-1]['close'], 4)
-percLongo = abs(round(((ultLongo - priLongo) / priLongo) * 100, 3))
+sr = {}
 
-print('\nFechamento da última vela = {} e da vela {} = {}'.format(ultLongo, perLongo, priLongo))
-print('Longo em', str(percLongo) + "%\n")
-if ultLongo > priLongo:
-   if percLongo > 0.2:
-      print('Forte tendencia de alta')
-   else:
-      if ultCurto < priCurto:
-         if percCurto > 0.2:
-            print('Tendencia de alta com possível reversão')
-         else:
-            print('Tendencia de alta, na correção')
-      else:
-         print('Tendencia de alta')
-      print('Curto em', str(percCurto) + "%")
-else:
-   if percLongo > 0.2:
-      print('Forte tendencia de baixa')
-   else:
-      if ultCurto < priCurto:
-         if percCurto > 0.2:
-            print('Tendencia de baixa com possível reversão')
-         else:
-            print('Tendencia de baixa, na correção')
-      else:
-         print('Tendencia de baixa')
-      print('Curto em', str(percCurto) + "%\n")
+for dados in indicators:
+   if dados['candle_size'] == (int(tempoGrafReal)) and 'Classic' in dados['name']:
+      sr.update({dados['name'].replace('Classic ', ''): dados['value']})
+
+print(sr)
 
 Logout(api)
